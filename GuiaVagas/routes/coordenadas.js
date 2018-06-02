@@ -1,21 +1,7 @@
 'use strict';
 var express = require ('express');
 var router = express.Router ();
-var mongoose = require ('mongoose');
-mongoose.connect ('mongodb://localhost/GuiaVagas');
-var Schema = mongoose.Schema;
-
-var coordenadaSchema = new Schema (
-  {
-    latitude: {type: String, required: true},
-    longitude: {type: String, required: true},
-    tipo: String,
-    status: Boolean,
-  },
-  {collection: 'coordenadas'}
-);
-
-var Coordenada = mongoose.model ('Coordenada', coordenadaSchema);
+var Coordenada = require ('../models/coordenadas');
 
 /* GET Coordenada listing. */
 router.get ('/', function (req, res, next) {
@@ -35,7 +21,7 @@ router.post ('/create', function (req, res, next) {
     latitude: req.body.latitude,
     longitude: req.body.longitude,
     tipo: req.body.tipo,
-    status: true,
+    // status: true,
   };
 
   var data = new Coordenada (item);

@@ -12,6 +12,8 @@
 
 <div class="container">
   <h2>Cadastrar Coordenada</h2>
+
+ <span class="text-danger"> <%= errors.global %> </span>
   <form action="/coordenadas/create" method='POST'>
     <div class="form-group">
       <label for="text">Latitude:</label>

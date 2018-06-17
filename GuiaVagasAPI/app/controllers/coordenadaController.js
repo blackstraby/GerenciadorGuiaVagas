@@ -1,60 +1,60 @@
 import Coordenada from '../models/coordenada';
-import {ObjectId} from 'mongodb';
+import { ObjectId } from 'mongodb';
 
-const safeObjectId = s => (ObjectId.isValid (s) ? new ObjectId (s) : null);
+const safeObjectId = s => (ObjectId.isValid(s) ? new ObjectId(s) : null);
 
 export const cadastrarCoordenada = async (req, res, next) => {
-  const {latitude, longitude, tipo, status} = req.body;
+  const { latitude, longitude, tipo, isOcupada } = req.body;
 
   try {
-    if (await Coordenada.findOne ({latitude, longitude, tipo}))
+    if (await Coordenada.findOne({ latitude, longitude, tipo }))
       return res
-        .status (400)
-        .send ({error: 'Coordenada já existe no sistema.'});
+        .status(400)
+        .send({ error: 'Coordenada já existe no sistema.' });
 
-    const coordenada = await Coordenada.create ({
+    const coordenada = await Coordenada.create({
       latitude,
       longitude,
       tipo,
-      status,
+      isOcupada,
     });
-    await coordenada.save ();
+    await coordenada.save();
 
-    return res.send ({coordenada});
+    return res.send({ coordenada });
   } catch (err) {
-    console.log (err);
-    return res.status (400).send ({error: 'Error creating new coordinate'});
+    console.log(err);
+    return res.status(400).send({ error: 'Error creating new coordinate' });
   }
 };
 
 export const atualizarCoordenadaById = async (req, res, next) => {
   try {
-    const {latitude, longitude, tipo, status} = req.body;
+    const { latitude, longitude, tipo, isOcupada } = req.body;
 
-    const coordenada = await Coordenada.findByIdAndUpdate (
+    const coordenada = await Coordenada.findByIdAndUpdate(
       req.params.id,
       {
         latitude,
         longitude,
         tipo,
-        status,
+        isOcupada,
       },
-      {new: true}
+      { new: true }
     );
 
-    await coordenada.save ();
-    return res.send ({coordenada});
+    await coordenada.save();
+    return res.send({ coordenada });
   } catch (err) {
-    return res.status (400).send ({error: 'Error updating coordinate'});
+    return res.status(400).send({ error: 'Error updating coordinate' });
   }
 };
 
 export const atualizarCoordenada = async (req, res, next) => {
   try {
-    const {latitude, longitude, tipo, status} = req.body;
-    const {lat, long, type} = req.params;
+    const { latitude, longitude, tipo, status } = req.body;
+    const { lat, long, type } = req.params;
 
-    const coordenada = await Coordenada.findOneAndUpdate (
+    const coordenada = await Coordenada.findOneAndUpdate(
       {
         latitude: lat,
         longitude: long,
@@ -64,16 +64,16 @@ export const atualizarCoordenada = async (req, res, next) => {
         latitude,
         longitude,
         tipo,
-        status,
+        isOcupada,
       },
-      {new: true}
+      { new: true }
     );
 
-    return res.send ({coordenada});
+    return res.send({ coordenada });
   } catch (err) {
     return res
-      .status (400)
-      .send ({error: 'Error updating coordinate lat,long,tipo'});
+      .status(400)
+      .send({ error: 'Error updating coordinate lat,long,tipo' });
   }
 };
 
@@ -90,22 +90,22 @@ export const listaCoordenadas = async (req, res, next) => {
   }
 
   try {
-    const coordenadas = await Coordenada.find ({})
-      .sort ({status: -1})
-      .skip (perPage * page - perPage)
-      .limit (perPage);
+    const coordenadas = await Coordenada.find({})
+      .sort({ isOcupada: -1 })
+      .skip(perPage * page - perPage)
+      .limit(perPage);
 
-    return res.send ({coordenadas});
+    return res.send({ coordenadas });
   } catch (err) {
-    return res.status (400).send ({error: 'Error loading coordenadas'});
+    return res.status(400).send({ error: 'Error loading coordenadas' });
   }
 };
 
 export const getCoordenadaById = async (req, res, next) => {
   try {
-    const coordenada = await Coordenada.findById (req.params.id);
-    return res.send ({coordenada});
+    const coordenada = await Coordenada.findById(req.params.id);
+    return res.send({ coordenada });
   } catch (err) {
-    return res.status (400).send ({error: 'Error loading coordenadas'});
+    return res.status(400).send({ error: 'Error loading coordenadas' });
   }
 };

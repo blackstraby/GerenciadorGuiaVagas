@@ -2,7 +2,7 @@ import express from 'express';
 
 import Coordenada from '../models/coordenada';
 import parseErrors from '../utils/parseErrors';
-import {safeObjectId} from '../utils/db';
+import { safeObjectId } from '../utils/db';
 import {
   enviarEmailConfirmacao,
   enviarEmailRecuperacaoSenha,
@@ -14,15 +14,15 @@ import {
   atualizarCoordenada,
 } from '../controllers/coordenadaController';
 
-const router = express.Router ();
+const router = express.Router();
 
-router.route ('/cadastrarCoordenada').post (cadastrarCoordenada);
-router.route ('/atualizarCoordenadaById/:id').post (atualizarCoordenadaById);
+router.route('/cadastrarCoordenada').post(cadastrarCoordenada);
+router.route('/atualizarCoordenadaById/:id').post(atualizarCoordenadaById);
 router
-  .route ('/atualizarCoordenada/:lat/:long/:type')
-  .post (atualizarCoordenada);
+  .route('/atualizarCoordenada/:lat/:long/:type')
+  .post(atualizarCoordenada);
 
-router.post ('/cadastrar', async (req, res) => {
+router.post('/cadastrar', async (req, res) => {
   const {
     numero_inscricao,
     cpf,
@@ -31,32 +31,32 @@ router.post ('/cadastrar', async (req, res) => {
     celular,
     tokenVoucher,
   } = req.body.user;
-  const user = new User ({
-    dados: {numero_inscricao, cpf, email, senha, celular},
+  const user = new User({
+    dados: { numero_inscricao, cpf, email, senha, celular },
   });
-  user.setSenha (senha);
-  user.setTokenConfirmacao ();
+  user.setSenha(senha);
+  user.setTokenConfirmacao();
 
-  const voucher = tokenVoucher ? await getVoucherByToken (tokenVoucher) : false;
+  const voucher = tokenVoucher ? await getVoucherByToken(tokenVoucher) : false;
 
   if (!voucher && tokenVoucher) {
-    res.status (400).json ({
+    res.status(400).json({
       errors: {
         global: 'Voucher inválido ou expirado. Caso não possua, deixe o campo em branco.',
       },
     });
   } else {
-    User.findOne ({
+    User.findOne({
       'dados.numero_inscricao': user.dados.numero_inscricao,
       'dados.cpf': user.dados.cpf,
       'dados.confirmado': true,
-    }).then (candidato => {
+    }).then(candidato => {
       if (candidato) {
-        res.status (400).json ({
-          errors: {global: 'Esse usuário já possuí uma conta ativada.'},
+        res.status(400).json({
+          errors: { global: 'Esse usuário já possuí uma conta ativada.' },
         });
       } else {
-        User.findOneAndUpdate (
+        User.findOneAndUpdate(
           {
             'dados.numero_inscricao': user.dados.numero_inscricao,
             'dados.cpf': user.dados.cpf,
@@ -69,32 +69,32 @@ router.post ('/cadastrar', async (req, res) => {
             'dados.tokenConfirmacao': user.dados.tokenConfirmacao,
             'dados.voucher': voucher ? voucher._id : '',
           },
-          {new: true}
+          { new: true }
         )
-          .then (userRecord => {
+          .then(userRecord => {
             if (userRecord) {
               if (voucher) {
-                Voucher.findOneAndUpdate (
-                  {_id: voucher._id},
-                  {status: 'ATIVO'}
-                ).then (() => {
-                  enviarEmailConfirmacao (userRecord);
-                  res.json ({user: userRecord.toAuthJSON ()});
+                Voucher.findOneAndUpdate(
+                  { _id: voucher._id },
+                  { status: 'ATIVO' }
+                ).then(() => {
+                  enviarEmailConfirmacao(userRecord);
+                  res.json({ user: userRecord.toAuthJSON() });
                 });
               } else {
-                enviarEmailConfirmacao (userRecord);
-                res.json ({user: userRecord.toAuthJSON ()});
+                enviarEmailConfirmacao(userRecord);
+                res.json({ user: userRecord.toAuthJSON() });
               }
             } else {
-              res.status (400).json ({
+              res.status(400).json({
                 errors: {
                   global: 'Credenciais inválidas para cadastro. Certifique-se de que você é um candidato devidamente cadastrado no TSE.',
                 },
               });
             }
           })
-          .catch (err => {
-            res.status (400).json ({
+          .catch(err => {
+            res.status(400).json({
               errors: {
                 global: 'Credenciais inválidas para cadastro. Certifique-se de que você é um candidato devidamente cadastrado no TSE.',
               },
@@ -107,55 +107,55 @@ router.post ('/cadastrar', async (req, res) => {
 
 /*** Login ***/
 
-router.post ('/logar/candidato', (req, res) => {
-  const {credentials} = req.body;
-  User.findOne ({
-    'dados.email': credentials.email.toUpperCase (),
-  }).then (user => {
-    if (user && user.isSenhaValida (credentials.senha)) {
-      res.json ({user: user.toAuthJSON ()});
+router.post('/logar/candidato', (req, res) => {
+  const { credentials } = req.body;
+  User.findOne({
+    'dados.email': credentials.email.toUpperCase(),
+  }).then(user => {
+    if (user && user.isSenhaValida(credentials.senha)) {
+      res.json({ user: user.toAuthJSON() });
     } else {
-      res.status (400).json ({errors: {global: 'Usuário não encontrado'}});
+      res.status(400).json({ errors: { global: 'Usuário não encontrado' } });
     }
   });
 });
 
-router.post ('/login/enviarEmailRecuperacaoSenha', (req, res) => {
-  const {credentials} = req.body;
-  const candidato = new User ({});
-  candidato.setTokenRecuperacaoSenha ();
-  User.findOneAndUpdate (
+router.post('/login/enviarEmailRecuperacaoSenha', (req, res) => {
+  const { credentials } = req.body;
+  const candidato = new User({});
+  candidato.setTokenRecuperacaoSenha();
+  User.findOneAndUpdate(
     {
-      'dados.email': credentials.email.toUpperCase (),
+      'dados.email': credentials.email.toUpperCase(),
     },
     {
       'dados.tokenRecuperacaoSenha': candidato.dados.tokenRecuperacaoSenha,
     },
-    {new: true}
+    { new: true }
   )
-    .then (userRecord => {
-      enviarEmailRecuperacaoSenha (userRecord);
-      res.json ({candidato: userRecord.toAuthJSON ()});
+    .then(userRecord => {
+      enviarEmailRecuperacaoSenha(userRecord);
+      res.json({ candidato: userRecord.toAuthJSON() });
     })
-    .catch (err => res.status (400).json ({errors: parseErrors (err.errors)}));
+    .catch(err => res.status(400).json({ errors: parseErrors(err.errors) }));
 });
 
-router.post ('/login/esqueciSenha/candidato/token', (req, res) => {
+router.post('/login/esqueciSenha/candidato/token', (req, res) => {
   const token = req.body.token;
-  User.findOne ({'dados.tokenRecuperacaoSenha': token}).then (candidato => {
+  User.findOne({ 'dados.tokenRecuperacaoSenha': token }).then(candidato => {
     if (candidato) {
-      res.json ({candidato: candidato.toAuthJSON ()});
+      res.json({ candidato: candidato.toAuthJSON() });
     } else {
-      res.status (400).json ({errors: {global: 'Token inválido'}});
+      res.status(400).json({ errors: { global: 'Token inválido' } });
     }
   });
 });
 
-router.post ('/login/esqueciSenha/candidato/recuperarSenha', (req, res) => {
-  const {credentials} = req.body;
-  const candidato = new User ({});
-  candidato.setSenha (credentials.senha);
-  User.findOneAndUpdate (
+router.post('/login/esqueciSenha/candidato/recuperarSenha', (req, res) => {
+  const { credentials } = req.body;
+  const candidato = new User({});
+  candidato.setSenha(credentials.senha);
+  User.findOneAndUpdate(
     {
       'dados.tokenRecuperacaoSenha': credentials.token,
     },
@@ -163,47 +163,47 @@ router.post ('/login/esqueciSenha/candidato/recuperarSenha', (req, res) => {
       'dados.senha': candidato.dados.senha,
       'dados.tokenRecuperacaoSenha': '',
     },
-    {new: true}
+    { new: true }
   )
-    .then (userRecord => {
-      res.json ({candidato: userRecord.toAuthJSON ()});
+    .then(userRecord => {
+      res.json({ candidato: userRecord.toAuthJSON() });
     })
-    .catch (err => res.status (400).json ({errors: parseErrors (err.errors)}));
+    .catch(err => res.status(400).json({ errors: parseErrors(err.errors) }));
 });
 
-router.post ('/confirmacao', (req, res) => {
+router.post('/confirmacao', (req, res) => {
   const token = req.body.token;
-  User.findOneAndUpdate (
-    {'dados.tokenConfirmacao': token},
-    {'dados.tokenConfirmacao': '', 'dados.confirmado': true},
-    {new: true}
-  ).then (user => {
+  User.findOneAndUpdate(
+    { 'dados.tokenConfirmacao': token },
+    { 'dados.tokenConfirmacao': '', 'dados.confirmado': true },
+    { new: true }
+  ).then(user => {
     if (user) {
-      res.json ({
-        user: user.toAuthJSON (),
+      res.json({
+        user: user.toAuthJSON(),
       });
     } else {
-      Anunciante.findOneAndUpdate (
-        {'dados.tokenConfirmacao': token},
-        {'dados.tokenConfirmacao': '', 'dados.confirmado': true},
-        {new: true}
-      ).then (user => {
+      Anunciante.findOneAndUpdate(
+        { 'dados.tokenConfirmacao': token },
+        { 'dados.tokenConfirmacao': '', 'dados.confirmado': true },
+        { new: true }
+      ).then(user => {
         if (user) {
-          res.json ({
-            user: user.toAuthJSON (),
+          res.json({
+            user: user.toAuthJSON(),
           });
         } else {
-          Colaborador.findOneAndUpdate (
-            {'dados.tokenConfirmacao': token},
-            {'dados.tokenConfirmacao': '', 'dados.confirmado': true},
-            {new: true}
-          ).then (user => {
+          Colaborador.findOneAndUpdate(
+            { 'dados.tokenConfirmacao': token },
+            { 'dados.tokenConfirmacao': '', 'dados.confirmado': true },
+            { new: true }
+          ).then(user => {
             if (user) {
-              res.json ({
-                user: user.toAuthJSON (),
+              res.json({
+                user: user.toAuthJSON(),
               });
             } else {
-              res.status (400).json ({});
+              res.status(400).json({});
             }
           });
         }
@@ -212,127 +212,127 @@ router.post ('/confirmacao', (req, res) => {
   });
 });
 
-router.post ('/dashboard', (req, res) => {
-  const {credentials, skip, limit} = req.body;
-  User.findOne ({
-    'dados.email': credentials.email.toUpperCase (),
-  }).then (user => {
+router.post('/dashboard', (req, res) => {
+  const { credentials, skip, limit } = req.body;
+  User.findOne({
+    'dados.email': credentials.email.toUpperCase(),
+  }).then(user => {
     if (user) {
-      Post.find ({candidato_id: user._id})
-        .sort ({createdAt: -1})
-        .skip (skip)
-        .limit (limit)
-        .then (posts => {
-          res.json ({posts: posts});
+      Post.find({ candidato_id: user._id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .then(posts => {
+          res.json({ posts: posts });
         });
     } else {
-      res.status (400).json ({errors: {global: 'Nenhum post encontrado'}});
+      res.status(400).json({ errors: { global: 'Nenhum post encontrado' } });
     }
   });
 });
 
-router.post ('/perfil', (req, res) => {
-  const {credentials} = req.body;
-  User.findOne ({
-    'dados.email': credentials.email.toUpperCase (),
-  }).then (async perfil => {
+router.post('/perfil', (req, res) => {
+  const { credentials } = req.body;
+  User.findOne({
+    'dados.email': credentials.email.toUpperCase(),
+  }).then(async perfil => {
     if (perfil) {
-      perfil.numeroPostsDiario = await Post.getNumeroPostsDiario (perfil);
-      res.json ({
+      perfil.numeroPostsDiario = await Post.getNumeroPostsDiario(perfil);
+      res.json({
         perfil: {
           ...perfil._doc,
           numeroPostsDiario: 5 - perfil.numeroPostsDiario,
         },
       });
     } else {
-      res.status (400).json ({});
+      res.status(400).json({});
     }
   });
 });
 
-router.post ('/perfil/alterarSenha', (req, res) => {
-  const {credentials} = req.body;
-  User.findOne ({
-    'dados.email': credentials.email.toUpperCase (),
-  }).then (user => {
-    if (user && user.isSenhaValida (credentials.senhaAtual)) {
-      user.setSenha (credentials.senha);
-      User.findOneAndUpdate (
+router.post('/perfil/alterarSenha', (req, res) => {
+  const { credentials } = req.body;
+  User.findOne({
+    'dados.email': credentials.email.toUpperCase(),
+  }).then(user => {
+    if (user && user.isSenhaValida(credentials.senhaAtual)) {
+      user.setSenha(credentials.senha);
+      User.findOneAndUpdate(
         {
           'dados.email': user.dados.email,
         },
         {
           'dados.senha': user.dados.senha,
         },
-        {new: true}
+        { new: true }
       )
-        .then (userRecord => {
-          res.json ({candidato: userRecord.toAuthJSON ()});
+        .then(userRecord => {
+          res.json({ candidato: userRecord.toAuthJSON() });
         })
-        .catch (err =>
-          res.status (400).json ({errors: parseErrors (err.errors)})
+        .catch(err =>
+          res.status(400).json({ errors: parseErrors(err.errors) })
         );
     } else {
-      res.status (400).json ({errors: {global: 'Senha incorreta'}});
+      res.status(400).json({ errors: { global: 'Senha incorreta' } });
     }
   });
 });
 
-router.get ('/postsPorNomeUrna/:nome_urna', (req, res) => {
+router.get('/postsPorNomeUrna/:nome_urna', (req, res) => {
   const nome_urna = req.params.nome_urna;
-  User.findOne ({'dados.nome_urna': nome_urna.toUpperCase ()}).then (user => {
+  User.findOne({ 'dados.nome_urna': nome_urna.toUpperCase() }).then(user => {
     if (user) {
-      Post.find ({candidato_id: user._id})
-        .sort ({createdAt: -1})
-        .then (posts => {
-          res.json ({candidato: {dados: user, posts: posts}});
+      Post.find({ candidato_id: user._id })
+        .sort({ createdAt: -1 })
+        .then(posts => {
+          res.json({ candidato: { dados: user, posts: posts } });
         });
     } else {
-      res.status (400).json ({errors: {global: 'Candidato não encontrado'}});
+      res.status(400).json({ errors: { global: 'Candidato não encontrado' } });
     }
   });
 });
 
-router.get ('/postsPorId/:id', (req, res) => {
+router.get('/postsPorId/:id', (req, res) => {
   const id = req.params.id;
-  User.findOne ({_id: safeObjectId (id)}).then (user => {
+  User.findOne({ _id: safeObjectId(id) }).then(user => {
     if (user) {
-      Post.find ({candidato_id: user._id})
-        .sort ({createdAt: -1})
-        .then (posts => {
-          res.json ({candidato: {dados: user, posts: posts}});
+      Post.find({ candidato_id: user._id })
+        .sort({ createdAt: -1 })
+        .then(posts => {
+          res.json({ candidato: { dados: user, posts: posts } });
         });
     } else {
-      res.status (400).json ({errors: {global: 'Candidato não encontrado'}});
+      res.status(400).json({ errors: { global: 'Candidato não encontrado' } });
     }
   });
 });
 
-router.post ('/alterarStatus/post', (req, res) => {
+router.post('/alterarStatus/post', (req, res) => {
   const _id = req.body.post._id;
-  const status = req.body.status;
-  Post.findOneAndUpdate (
-    {_id: safeObjectId (_id)},
-    {status: status},
-    {new: true}
-  ).then (
+  const isOcupada = req.body.isOcupada;
+  Post.findOneAndUpdate(
+    { _id: safeObjectId(_id) },
+    { isOcupada: isOcupada },
+    { new: true }
+  ).then(
     post =>
       post
-        ? res.json ({
-            post: post,
-          })
-        : res.status (400).json ({global: 'publicação não encontrada'})
+        ? res.json({
+          post: post,
+        })
+        : res.status(400).json({ global: 'publicação não encontrada' })
   );
 });
 
-router.get ('/postById/:id', (req, res) => {
+router.get('/postById/:id', (req, res) => {
   const id = req.params.id;
-  Post.findOne ({_id: id})
-    .then (async post => {
-      const usuario = await User.getUsuario (post.candidato_id);
-      console.log (usuario);
+  Post.findOne({ _id: id })
+    .then(async post => {
+      const usuario = await User.getUsuario(post.candidato_id);
+      console.log(usuario);
       if (usuario)
-        res.json ({
+        res.json({
           dados: {
             post: post,
             autor: {
@@ -350,53 +350,53 @@ router.get ('/postById/:id', (req, res) => {
         });
       else
         res
-          .status (400)
-          .json ({errors: {global: 'Essa postagem não está mais disponível'}});
+          .status(400)
+          .json({ errors: { global: 'Essa postagem não está mais disponível' } });
     })
-    .catch (err =>
-      res.status (400).json ({errors: {global: 'Postagem não encontrada'}})
+    .catch(err =>
+      res.status(400).json({ errors: { global: 'Postagem não encontrada' } })
     );
 });
 
-router.get ('/postsPorNomeUsuario/:nome_usuario', (req, res) => {
+router.get('/postsPorNomeUsuario/:nome_usuario', (req, res) => {
   const nome_usuario = req.params.nome_usuario;
-  User.findOne ({
-    'dados.nome_usuario': nome_usuario.toLowerCase (),
-  }).then (user => {
+  User.findOne({
+    'dados.nome_usuario': nome_usuario.toLowerCase(),
+  }).then(user => {
     if (user) {
-      Post.find ({candidato_id: user._id})
-        .sort ({createdAt: -1})
-        .then (posts => {
-          res.json ({candidato: {dados: user, posts: posts}});
+      Post.find({ candidato_id: user._id })
+        .sort({ createdAt: -1 })
+        .then(posts => {
+          res.json({ candidato: { dados: user, posts: posts } });
         });
     } else {
-      res.status (400).json ({errors: {global: 'Candidato não encontrado'}});
+      res.status(400).json({ errors: { global: 'Candidato não encontrado' } });
     }
   });
 });
 
-router.post ('/denunciar/post', (req, res) => {
-  const {id} = req.body.post;
-  Post.findOne ({
-    _id: safeObjectId (id),
-  }).then (post => {
+router.post('/denunciar/post', (req, res) => {
+  const { id } = req.body.post;
+  Post.findOne({
+    _id: safeObjectId(id),
+  }).then(post => {
     const denuncias = post.denuncias === undefined ? 0 : post.denuncias;
     if (post) {
-      Post.findOneAndUpdate (
+      Post.findOneAndUpdate(
         {
-          _id: safeObjectId (id),
+          _id: safeObjectId(id),
         },
         {
-          denuncias: parseInt (denuncias) + 1,
+          denuncias: parseInt(denuncias) + 1,
         },
-        {new: true}
+        { new: true }
       )
-        .then (res.json ({denuncia: {post, data: new Date ()}}))
-        .catch (err =>
-          res.status (400).json ({errors: parseErrors (err.errors)})
+        .then(res.json({ denuncia: { post, data: new Date() } }))
+        .catch(err =>
+          res.status(400).json({ errors: parseErrors(err.errors) })
         );
     } else {
-      res.status (400).json ({errors: {global: 'Post não encontrado'}});
+      res.status(400).json({ errors: { global: 'Post não encontrado' } });
     }
   });
 });

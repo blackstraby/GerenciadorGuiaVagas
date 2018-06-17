@@ -1,7 +1,7 @@
-import mongoose, {Schema} from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 // Define Coordenada
-var coordenadaSchema = new Schema ({
+var coordenadaSchema = new Schema({
   latitude: {
     type: String,
     required: true,
@@ -14,17 +14,12 @@ var coordenadaSchema = new Schema ({
     type: String,
     required: true,
   },
-  status: {
+  isOcupada: {
     type: Boolean,
     required: true,
-    default: true,
-  },
-  createdAt: {
-    type: Date,
-    required: true,
-    default: new Date (),
-  },
-});
+    default: false,
+  }
+}, { timestamps: true });
 
 // Export Mongoose model
-export default mongoose.model ('coordenada', coordenadaSchema);
+export default mongoose.model('coordenada', coordenadaSchema);

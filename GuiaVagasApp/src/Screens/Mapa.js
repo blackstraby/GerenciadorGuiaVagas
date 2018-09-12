@@ -4,7 +4,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { OpenMapDirections } from '../Components/OpenDirections/';
 
 //import RetroMapStyles from './RetroMapStyles.json';
-import icon from '../../assets/icon2.png'
+import icon from '../../assets/icon.png'
 import coordenadas from '../../assets/coordenadas';
 
 const { width, height } = Dimensions.get('window');
@@ -13,7 +13,7 @@ const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-export default class MapScreen  extends Component {
+export default class MapScreen extends Component {
   constructor() {
     super();
     this.state = {
@@ -77,7 +77,7 @@ export default class MapScreen  extends Component {
   }
 
   _callShowDirections = (coordenada) => {
-   // console.log(coordenada)
+    // console.log(coordenada)
     const startPoint = {
       longitude: this.state.region.longitude,
       latitude: this.state.region.latitude
@@ -110,22 +110,22 @@ export default class MapScreen  extends Component {
         >
           {
             this.state.region != null
-              &&
-              <MapView.Marker
-                ref={ref => { this.myLocation = ref; }}
-                key={'local'}
-                coordinate={this.state.region}
-                pinColor={'#01C89E'}
-                title="Localização"
-                description="Você está aqui!"
-              />
+            &&
+            <MapView.Marker
+              ref={ref => { this.myLocation = ref; }}
+              key={'local'}
+              coordinate={this.state.region}
+              pinColor={'#01C89E'}
+              title="Localização"
+              description="Você está aqui!"
+            />
           }
           {coordenadas.coordenadas.map((coordenada, index) =>
             <MapView.Marker
               key={`coordinate_${index}`}
               identifier={index.toString()}
               coordinate={coordenada}
-              image={icon}            
+              image={icon}
               onPress={() => {
                 this.setState({ destino: coordenada }),
                   Alert.alert('Navegação', "Deseja ativar a rota até a vaga?",
@@ -139,10 +139,10 @@ export default class MapScreen  extends Component {
 
           {
             destino
-              && <MapView.Marker
-                key={destino}
-                coordinate={destino}
-                image={icon} />              
+            && <MapView.Marker
+              key={destino}
+              coordinate={destino}
+              image={icon} />
           }
 
 

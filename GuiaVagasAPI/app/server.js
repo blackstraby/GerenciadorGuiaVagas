@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import path from 'path';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
@@ -9,18 +8,18 @@ import Promise from 'bluebird';
 import routerApp from './routes/routerApp';
 import routerWeb from './routes/routerWeb';
 
-dotenv.config ();
+dotenv.config();
 
-const app = express ();
-app.use (bodyParser.json ());
+const app = express();
+app.use(bodyParser.json());
 mongoose.Promise = Promise;
-mongoose.connect (process.env.MONGODB_URL, {useMongoClient: true});
+mongoose.connect(process.env.MONGODB_URL, { useMongoClient: true });
 
-app.use ('/api/routerApp', routerApp);
-app.use ('/api/routerWeb', routerWeb);
+app.use('/api/routerApp', routerApp);
+app.use('/api/routerWeb', routerWeb);
 
-app.get ('/*', (req, res) => {
-  res.sendFile (path.join (__dirname, 'index.html'));
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen (3000, () => console.log ('Running on http://localhost:3000'));
+app.listen(3000, () => console.log('Running on http://localhost:3000'));

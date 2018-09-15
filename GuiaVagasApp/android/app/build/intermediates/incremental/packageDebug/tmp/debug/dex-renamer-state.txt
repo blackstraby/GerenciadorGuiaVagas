@@ -1,4 +1,0 @@
-#Wed Sep 12 14:08:31 BRT 2018
-base.0=D\:\\Projetos\\Repositorios\\Noodejs\\GerenciadorGuiaVagas\\GuiaVagasApp\\android\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0
-path.0=classes.dex
-renamed.0=classes.dex

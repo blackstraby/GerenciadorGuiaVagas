@@ -1,39 +1,37 @@
 {
-  "name": "api_conheca",
+  "name": "api",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --exec babel-node -- app/server.js"
+    "start": "nodemon  --exec babel-node ./src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.18.3"
   },
   "dependencies": {
-    "aws-sdk": "^2.190.0",
-    "axios": "^0.18.0",
-    "bcrypt": "^1.0.3",
-    "bluebird": "^3.5.1",
-    "body-parser": "^1.18.2",
-    "dotenv": "^4.0.0",
-    "express": "^4.16.2",
-    "fs": "0.0.1-security",
-    "hashids": "^1.1.4",
-    "jsonwebtoken": "^8.1.0",
-    "lodash": "^4.17.4",
+    "bcrypt": "^2.0.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "cron": "^1.4.1",
+    "dotenv": "^6.1.0",
+    "express": "^4.16.3",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^8.2.1",
     "md5": "^2.2.1",
-    "moment": "^2.19.2",
-    "mongoose": "^4.13.4",
-    "mongoose-unique-validator": "^1.0.6",
-    "multer": "^1.3.0",
-    "nodemailer": "^4.4.0",
-    "twilio": "^3.15.1"
+    "mongoose": "^5.2.9",
+    "nodemailer": "^4.6.4",
+    "nodemailer-express-handlebars": "^3.0.0",
+    "path": "^0.12.7",
+    "validator": "^10.9.0"
   }
 }
